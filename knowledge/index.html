@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Data catalog for the Enterprise Systems Knowledge Graph">
+<title>Data Catalog — Enterprise Systems Atlas</title>
+<style>
+:root{color-scheme:dark;--bg:#07101f;--panel:#101d31;--panel2:#14233a;--text:#edf4ff;--muted:#92a4bf;--line:rgba(155,180,216,.16);--cyan:#64d8ff;--violet:#9a8cff;--green:#63e6a8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% 0,rgba(66,185,255,.15),transparent 31%),radial-gradient(circle at 90% 5%,rgba(133,103,255,.12),transparent 27%),var(--bg);color:var(--text);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit}.shell{width:min(1180px,calc(100% - 34px));margin:auto}.top{height:68px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--line)}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,rgba(100,216,255,.24),rgba(154,140,255,.23));color:var(--cyan)}.brand{font-weight:750;letter-spacing:-.02em}.crumb{color:var(--muted)}.back{margin-left:auto;text-decoration:none;padding:7px 11px;border:1px solid var(--line);border-radius:9px;color:var(--muted)}.back:hover{color:var(--text);border-color:var(--cyan)}main{padding:65px 0 80px}.eyebrow{text-transform:uppercase;letter-spacing:.18em;color:var(--cyan);font-weight:800;font-size:10px}.hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.6fr);gap:45px;align-items:end;margin-bottom:44px}h1{font-size:clamp(34px,6vw,64px);line-height:1.02;letter-spacing:-.055em;margin:11px 0 17px;max-width:770px}.lead{color:var(--muted);font-size:16px;max-width:670px;margin:0}.summary{display:grid;grid-template-columns:1fr 1fr;gap:11px}.metric{padding:18px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));box-shadow:0 18px 55px rgba(0,0,0,.16)}.metric strong{display:block;font-size:28px;line-height:1;color:var(--text);letter-spacing:-.04em}.metric span{display:block;margin-top:7px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}.section{margin-top:46px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:14px}.section h2{font-size:20px;letter-spacing:-.025em;margin:0}.section p{color:var(--muted);margin:4px 0 0}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:rgba(14,26,45,.75);box-shadow:0 20px 70px rgba(0,0,0,.16)}table{width:100%;border-collapse:collapse;min-width:760px}th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}th{position:sticky;top:0;background:#14233a;color:#a8bad3;text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:750}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:rgba(100,216,255,.035)}td:nth-child(2){color:#d8e5f7}code,.pill{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9eaff;background:rgba(100,216,255,.09);border:1px solid rgba(100,216,255,.12);border-radius:6px;padding:2px 6px;white-space:nowrap}.num{font-variant-numeric:tabular-nums;font-weight:750;color:var(--green)}.note{display:flex;gap:11px;margin-top:17px;padding:15px 17px;border:1px solid rgba(154,140,255,.18);border-radius:13px;background:rgba(154,140,255,.055);color:var(--muted)}.note b{color:#c8bfff}footer{padding:25px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media(max-width:780px){.hero{grid-template-columns:1fr;gap:28px}main{padding-top:42px}.shell{width:min(100% - 24px,1180px)}.summary{max-width:430px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="top"><span class="mark" aria-hidden="true">✦</span><span class="brand">Knowledge Atlas</span><span class="crumb">/ Data catalog</span><a class="back" href="../index.html?view=table">Browse tables</a><a class="back" style="margin-left:0" href="../index.html">← Open graph</a></nav>
+  <main>
+    <section class="hero">
+      <div><div class="eyebrow">Data dictionary</div><h1>What data lives where.</h1><p class="lead">A compact inventory of every embedded dataset, node label, and relationship used by the enterprise systems graph. All records are stored directly in <code>index.html</code> and assembled in the browser.</p></div>
+      <div class="summary"><div class="metric"><strong>325</strong><span>Nodes</span></div><div class="metric"><strong>422</strong><span>Relationships</span></div><div class="metric"><strong>7</strong><span>Node labels</span></div><div class="metric"><strong>11</strong><span>Edge types</span></div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Source inventory</h2><p>The table answers which data is stored in each source constant.</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Source</th><th>What it contains</th><th>Record shape</th><th>Records</th><th>Graph output</th></tr></thead><tbody>
+        <tr><td><code>DOM</code></td><td>Business domains</td><td><code>[id, name]</code></td><td class="num">5</td><td>Domain nodes</td></tr>
+        <tr><td><code>SYS</code></td><td>Enterprise system categories</td><td><code>[id, name, domainId, description]</code></td><td class="num">42</td><td>SystemType nodes + BELONGS_TO</td></tr>
+        <tr><td><code>IND</code></td><td>Industries</td><td><code>[id, name]</code></td><td class="num">14</td><td>Industry nodes</td></tr>
+        <tr><td><code>FEAT</code></td><td>Capabilities and provider systems</td><td><code>[id, name, systemIds[]]</code></td><td class="num">55</td><td>Feature nodes + 72 COVERS</td></tr>
+        <tr><td><code>P</code></td><td>Products grouped by system and lifecycle</td><td><code>{ systemId: { l, m, x } }</code></td><td class="num">209</td><td>Product nodes + IMPLEMENTS</td></tr>
+        <tr><td><code>MIG</code></td><td>Named modernization paths</td><td><code>[legacyProduct, modernProduct]</code></td><td class="num">16</td><td>MIGRATES_TO</td></tr>
+        <tr><td><code>UIN</code></td><td>System-to-industry usage</td><td><code>[systemId, industryIds[]]</code></td><td class="num">38</td><td>USED_IN</td></tr>
+        <tr><td><code>INTEG</code></td><td>Common system integrations</td><td><code>[sourceSystemId, targetSystemId]</code></td><td class="num">25</td><td>INTEGRATES_WITH</td></tr>
+        <tr><td><code>Generated rules</code></td><td>Orchestration, storage, analytics, governance, security</td><td><code>explicit ID lists</code></td><td class="num">20</td><td>Five operational edge types</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Node labels</h2><p>The entities available for filtering and exploration.</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Label</th><th>Count</th><th>Meaning</th><th>Key properties</th></tr></thead><tbody>
+        <tr><td><span class="pill">Domain</span></td><td class="num">5</td><td>Top-level business grouping</td><td>id, name, dom</td></tr>
+        <tr><td><span class="pill">SystemType</span></td><td class="num">42</td><td>Category of enterprise application</td><td>id, name, dom, desc</td></tr>
+        <tr><td><span class="pill">Feature</span></td><td class="num">55</td><td>Business or technical capability</td><td>id, name, dom</td></tr>
+        <tr><td><span class="pill">Industry</span></td><td class="num">14</td><td>Industry where systems are used</td><td>id, name</td></tr>
+        <tr><td><span class="pill">LegacyProduct</span></td><td rowspan="3" class="num">209 total</td><td>Legacy or on-premises example</td><td>name, status, hosting, sys</td></tr>
+        <tr><td><span class="pill">ModernProduct</span></td><td>Modern or cloud example</td><td>name, status, hosting, sys</td></tr>
+        <tr><td><span class="pill">HybridProduct</span></td><td>Deployment varies by version</td><td>name, status, hosting, sys</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Relationships</h2><p>Direction and volume of every graph connection.</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Relationship</th><th>Count</th><th>From → to</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td><code>BELONGS_TO</code></td><td class="num">42</td><td>System → Domain</td><td>Primary business domain</td></tr>
+        <tr><td><code>COVERS</code></td><td class="num">72</td><td>System → Feature</td><td>Capability provided</td></tr>
+        <tr><td><code>IMPLEMENTS</code></td><td class="num">209</td><td>Product → System</td><td>Product category</td></tr>
+        <tr><td><code>MIGRATES_TO</code></td><td class="num">16</td><td>Legacy → Modern product</td><td>Representative modernization path</td></tr>
+        <tr><td><code>USED_IN</code></td><td class="num">38</td><td>System → Industry</td><td>Industry relevance</td></tr>
+        <tr><td><code>INTEGRATES_WITH</code></td><td class="num">25</td><td>System → System</td><td>Common application integration</td></tr>
+        <tr><td><code>ORCHESTRATES</code></td><td class="num">6</td><td>Middleware → System</td><td>Coordination target</td></tr>
+        <tr><td><code>STORES_DATA_IN</code></td><td class="num">5</td><td>System → Database</td><td>Operational persistence</td></tr>
+        <tr><td><code>READS_FROM</code></td><td class="num">2</td><td>BI → Source</td><td>Analytics consumption</td></tr>
+        <tr><td><code>GOVERNS_DATA_OF</code></td><td class="num">3</td><td>MDM → System</td><td>Master-data governance</td></tr>
+        <tr><td><code>SECURES</code></td><td class="num">4</td><td>IAM → System</td><td>Identity and access protection</td></tr>
+      </tbody></table></div>
+      <div class="note"><b>Scope note</b><span>Products and migration links are representative. Verify vendor lifecycle, support, licensing, deployment options, and technical upgrade compatibility before making architecture decisions.</span></div>
+    </section>
+  </main>
+  <footer>Enterprise Systems Knowledge Atlas · Embedded data catalog</footer>
+</div>
+</body>
+</html>

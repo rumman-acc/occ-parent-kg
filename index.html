@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atlas — Enterprise Systems Knowledge Graph</title>
+<style>
+:root{
+  --bg:#ffffff;--panel:#f5f6f8;--text:#1b1e24;--muted:#5c6472;--border:#d8dce3;
+  --edge:#9aa1ad;--halo:#ffffff;--accent:#0b6fd6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c;--panel:#1d2128;--text:#e7e9ed;--muted:#9ba3b1;--border:#343b46;
+    --edge:#6c7483;--halo:#14171c;--accent:#57C7E3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171c;--panel:#1d2128;--text:#e7e9ed;--muted:#9ba3b1;--border:#343b46;
+  --edge:#6c7483;--halo:#14171c;--accent:#57C7E3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{display:flex;flex-direction:column;height:100%}
+header{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+h1{font-size:15px;font-weight:600;margin:0;letter-spacing:0}
+.sp{flex:1}
+.sm{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.btn,select,input[type=search]{font:inherit;font-size:13px;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:5px 10px}
+.btn{cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+input[type=search]{min-width:200px}
+#qbar{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:7px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#qbar b{color:var(--accent);font-weight:600;margin-right:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;border:1px solid var(--border);background:var(--panel);font:inherit;font-size:12px;color:var(--text);cursor:pointer}
+.chip.off{opacity:.45}
+.chip i{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid}
+.chip em{font-style:normal;color:var(--muted)}
+#main{position:relative;flex:1;min-height:0;overflow:hidden}
+#svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#svg:active{cursor:grabbing}
+line{stroke:var(--edge);stroke-width:1.2}
+.lk.on line{stroke:var(--accent);stroke-width:2.2}
+.rl{font-size:11px;fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--halo);stroke-width:3px;display:none;pointer-events:none}
+#svg.rlon .rl,.lk.on .rl{display:block}
+.nd{cursor:pointer}
+.nd circle{stroke-width:2}
+.lbl{fill:var(--text);text-anchor:middle;paint-order:stroke;stroke:var(--halo);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+#svg.lo .lbl.Feature,#svg.lo .lbl.LegacyProduct,#svg.lo .lbl.ModernProduct,#svg.lo .lbl.HybridProduct,#svg.lo .lbl.Industry{display:none}
+#svg.lo .nd.foc .lbl,#svg.lo .nd.hit .lbl{display:block}
+.dim{opacity:.13}
+.nd.sel circle,.nd.hit circle{stroke:var(--accent);stroke-width:4}
+#info{position:absolute;top:10px;right:10px;width:300px;max-height:calc(100% - 20px);overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px}
+#info.empty p{margin:6px 0 0;color:var(--text)}
+#info .m{color:var(--muted);font-size:12px}
+#info .h{font-weight:600;font-size:14px}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;color:#1b1e24}
+.ttl{font-size:16px;font-weight:600;margin:8px 0 8px;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0 0 10px}
+.kv dt{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rh{font-size:12px;color:var(--muted);margin:8px 0 4px}
+.rel{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:12.5px;color:var(--text);background:transparent;border:0;border-top:1px solid var(--border);padding:5px 2px;cursor:pointer}
+.rel:hover{background:var(--bg)}
+.rel span{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;min-width:96px}
+.rel i{width:10px;height:10px;border-radius:50%;flex:none}
+#status{padding:6px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;background:var(--bg)}
+@media (max-width:720px){
+  #info{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:46%}
+  #info.empty{display:none}
+  input[type=search]{min-width:0;flex:1}
+}
+</style>
+<style>
+/* Visual system ---------------------------------------------------------- */
+:root{
+  --bg:#07101f;--panel:rgba(13,24,43,.84);--panel-solid:#111d31;--text:#edf4ff;
+  --muted:#91a2bc;--border:rgba(148,174,211,.17);--edge:#67809f;--halo:#07101f;
+  --accent:#64d8ff;--accent-2:#8b7cff;--shadow:0 22px 70px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#eef4fb;--panel:rgba(255,255,255,.86);--panel-solid:#fff;--text:#142033;
+  --muted:#63728a;--border:rgba(42,67,102,.16);--edge:#8799af;--halo:#eef4fb;
+  --accent:#087ca7;--accent-2:#6658d3;--shadow:0 22px 70px rgba(35,57,88,.14);
+}
+*{box-sizing:border-box}
+body{
+  background:
+    radial-gradient(circle at 15% -10%,rgba(54,176,255,.16),transparent 35%),
+    radial-gradient(circle at 90% 5%,rgba(130,93,255,.13),transparent 30%),var(--bg);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing:.01em;
+}
+header{position:relative;z-index:5;padding:15px 20px 12px;background:rgba(7,16,31,.72);backdrop-filter:blur(22px);border-color:var(--border);gap:11px}
+:root[data-theme="light"] header{background:rgba(238,244,251,.74)}
+.brand{display:flex;align-items:center;gap:11px;min-width:300px}
+.brand-mark{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(100,216,255,.3);border-radius:12px;background:linear-gradient(145deg,rgba(100,216,255,.2),rgba(139,124,255,.22));box-shadow:inset 0 1px rgba(255,255,255,.15),0 8px 30px rgba(55,166,255,.12)}
+.brand-mark svg{width:22px;height:22px}
+.brand-copy{display:flex;flex-direction:column;gap:1px}
+.eyebrow{font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);font-weight:800}
+h1{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.nav-link{color:var(--muted);text-decoration:none;font-size:12px;font-weight:650;padding:7px 10px;border-radius:8px}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.view-switch{display:flex;gap:3px;padding:3px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.035)}
+.view-tab{padding:5px 10px;border-radius:7px;color:var(--muted);font-size:11px;font-weight:700;text-decoration:none;transition:.18s ease}
+.view-tab:hover{color:var(--text)}
+.view-tab.active{color:var(--text);background:rgba(100,216,255,.12);box-shadow:inset 0 0 0 1px rgba(100,216,255,.14)}
+.toolbar{gap:9px}
+.btn,select,input[type=search]{background:rgba(255,255,255,.055);border-color:var(--border);border-radius:9px;padding:7px 11px;transition:.18s ease}
+.btn:hover,select:hover,input[type=search]:hover{border-color:rgba(100,216,255,.45);background:rgba(100,216,255,.07)}
+input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2391a2bc' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:11px center}
+#qbar{border:0;border-left:2px solid var(--accent);border-radius:0;background:transparent;padding:2px 10px;color:var(--muted);opacity:.9}
+#qbar b{color:var(--accent)}
+.chip{background:rgba(255,255,255,.045);border-color:var(--border);padding:4px 10px 4px 7px;transition:.18s ease}
+.chip:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.24)}
+.chip.off{opacity:.35;filter:saturate(.3)}
+#main{background:radial-gradient(circle at 50% 47%,rgba(34,62,96,.22),transparent 58%)}
+.table-view{display:none;height:100%;overflow:auto;padding:28px;background:linear-gradient(180deg,rgba(7,16,31,.2),rgba(7,16,31,.65))}
+#app.table-mode .table-view{display:block}
+#app.table-mode #svg,#app.table-mode #info,#app.table-mode .graph-control{display:none}
+.table-shell{width:min(1440px,100%);margin:0 auto}
+.table-hero{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:24px}
+.table-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:800}
+.table-hero h2{font-size:28px;letter-spacing:-.04em;margin:4px 0 5px}.table-hero p{color:var(--muted);margin:0;max-width:630px}
+.table-metrics{display:flex;gap:9px}.table-metric{min-width:100px;padding:11px 14px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.035)}.table-metric b{display:block;font-size:20px;letter-spacing:-.03em}.table-metric span{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.data-card{border:1px solid var(--border);border-radius:16px;background:rgba(13,24,43,.78);box-shadow:var(--shadow);overflow:hidden}
+.data-toolbar{display:flex;gap:9px;align-items:center;padding:13px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.data-tabs{display:flex;gap:3px;margin-right:5px;padding:3px;background:rgba(255,255,255,.04);border-radius:9px}.data-tab{border:0;background:transparent;color:var(--muted);padding:6px 11px;border-radius:7px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.data-tab.active{background:rgba(100,216,255,.13);color:var(--text)}
+#tableSearch{min-width:270px}.data-toolbar .spacer{flex:1}.result-count{color:var(--muted);font-size:11px}
+.data-scroll{overflow:auto;max-height:calc(100vh - 285px)}.data-table{border-collapse:collapse;width:100%;min-width:900px}.data-table th,.data-table td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}.data-table th{position:sticky;top:0;z-index:2;background:var(--panel-solid);color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.1em}.data-table tbody tr:hover{background:rgba(100,216,255,.035)}.data-table tbody tr:last-child td{border-bottom:0}.data-table td{font-size:12px}.data-table code{font-size:10px;color:#a9e8ff;background:rgba(100,216,255,.08);padding:2px 5px;border-radius:5px}.data-table .node-link{border:0;background:none;color:var(--text);font:inherit;font-weight:680;padding:0;cursor:pointer;text-align:left}.data-table .node-link:hover{color:var(--accent)}
+.type-badge{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.type-badge:before{content:'';width:7px;height:7px;border-radius:50%;background:var(--dot);box-shadow:0 0 8px color-mix(in srgb,var(--dot) 65%,transparent)}
+.dir{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.empty-row{text-align:center!important;color:var(--muted);padding:45px!important}
+.graph-canvas{pointer-events:none}
+.lk path{fill:none;stroke:var(--edge);stroke-width:1.15;stroke-opacity:.47;vector-effect:non-scaling-stroke;transition:stroke .16s,stroke-opacity .16s,stroke-width .16s}
+.lk.on path{stroke:var(--accent);stroke-width:2.2;stroke-opacity:.95;filter:drop-shadow(0 0 4px rgba(100,216,255,.55))}
+.rl{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9.5px;letter-spacing:.055em;fill:var(--muted);stroke-width:4px}
+.nd circle{stroke-width:1.5;vector-effect:non-scaling-stroke;filter:url(#nodeShadow);transition:filter .18s,stroke-width .18s}
+.nd:hover circle,.nd.sel circle,.nd.hit circle{filter:url(#nodeGlow);stroke:#fff;stroke-width:2.5}
+.lbl{font-weight:560!important;font-size:11px;letter-spacing:.01em;stroke-width:4px}
+.nd.sel .lbl,.nd:hover .lbl{fill:#fff;font-weight:750!important}
+#info{top:14px;right:14px;width:320px;max-height:calc(100% - 28px);background:var(--panel);backdrop-filter:blur(18px);border-color:var(--border);border-radius:16px;padding:17px 18px;box-shadow:var(--shadow)}
+#info .h{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+#info.empty:before{content:'\2726';display:grid;place-items:center;width:38px;height:38px;margin-bottom:12px;border-radius:12px;color:var(--accent);background:rgba(100,216,255,.1);font-size:20px}
+.tag{color:#08111f;padding:3px 9px;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.ttl{font-size:19px;font-weight:730;letter-spacing:-.025em;margin:10px 0 13px}
+.kv{gap:6px 12px}.kv dt{font-size:10px;text-transform:uppercase;letter-spacing:.06em}.kv dd{font-size:12.5px}
+.rel{border-color:var(--border);padding:7px 3px;border-radius:5px}.rel:hover{background:rgba(100,216,255,.06)}
+#status{padding:7px 20px;background:rgba(7,16,31,.78);border-color:var(--border);backdrop-filter:blur(18px)}
+:root[data-theme="light"] #status{background:rgba(238,244,251,.82)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#62e6a7;box-shadow:0 0 8px #62e6a7;display:inline-block;margin-right:3px}
+@media(max-width:900px){.brand{min-width:0}.toolbar{width:100%}input[type=search]{flex:1;min-width:180px}}
+@media(max-width:720px){header{padding:12px}.brand-copy .eyebrow{display:none}.nav-link{margin-left:auto}#info{border-radius:15px}.sm:has(#rl){display:none}.table-view{padding:18px 12px}.table-hero{align-items:start;flex-direction:column}.table-metrics{width:100%}.table-metric{flex:1;min-width:0}#tableSearch{min-width:160px;flex:1}.data-scroll{max-height:calc(100vh - 330px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="row toolbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5" cy="12" r="2.2"/><circle cx="18.5" cy="5.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="m7 11 9.4-4.5M7 13l9.4 4.5"/></svg></span>
+        <span class="brand-copy"><span class="eyebrow">Knowledge Atlas</span><h1>Enterprise systems</h1></span>
+      </div>
+      <nav class="view-switch" aria-label="View mode">
+        <a class="view-tab active" data-mode-link="graph" href="index.html">Graph</a>
+        <a class="view-tab" data-mode-link="table" href="?view=table">Tables</a>
+      </nav>
+      <a class="nav-link" href="knowledge/">Data catalog</a>
+      <span class="sp"></span>
+      <label class="sm graph-control">View
+        <select id="pre" aria-label="Choose a view">
+          <option value="base">All systems, features and industries</option>
+          <option value="all">Everything, including products</option>
+          <option value="erp">ERP and its neighbors</option>
+          <option value="mig">Legacy to modern migration paths</option>
+          <option value="log">Logistics chain</option>
+          <option value="fin">Finance systems</option>
+          <option value="hlt">Healthcare landscape</option>
+        </select>
+      </label>
+      <input id="q" class="graph-control" type="search" placeholder="Find a system, feature or product" aria-label="Search nodes">
+      <label class="sm graph-control"><input type="checkbox" id="rl"> Relationship labels</label>
+      <button id="fit" class="btn graph-control" type="button">Fit to screen</button>
+    </div>
+    <div id="qbar" class="graph-control"><b>graph$</b><span id="qt"></span></div>
+    <div class="row graph-control" id="chips" role="group" aria-label="Show or hide node labels"></div>
+  </header>
+  <div id="main">
+    <section id="tableView" class="table-view" aria-label="Tabular graph data">
+      <div class="table-shell">
+        <div class="table-hero">
+          <div><div class="table-kicker">Connected data explorer</div><h2>Nodes and relationships</h2><p>Search and inspect the exact records behind the graph. Select a node name to open it in the visual graph.</p></div>
+          <div class="table-metrics"><div class="table-metric"><b id="nodeMetric">0</b><span>Nodes</span></div><div class="table-metric"><b id="edgeMetric">0</b><span>Relations</span></div></div>
+        </div>
+        <div class="data-card">
+          <div class="data-toolbar">
+            <div class="data-tabs" role="tablist"><button class="data-tab active" data-table-tab="nodes" role="tab" type="button">Nodes</button><button class="data-tab" data-table-tab="relations" role="tab" type="button">Relationships</button></div>
+            <input id="tableSearch" type="search" placeholder="Search names, types or properties" aria-label="Search table">
+            <select id="tableType" aria-label="Filter by type"></select>
+            <span class="spacer"></span><span id="tableCount" class="result-count"></span>
+            <button id="exportCsv" class="btn" type="button">Export CSV</button>
+          </div>
+          <div class="data-scroll"><table class="data-table"><thead id="dataHead"></thead><tbody id="dataBody"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+    <svg id="svg" role="img" aria-label="Force-directed knowledge graph of enterprise systems, features, industries and products">
+      <defs>
+        <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="currentColor" stroke-opacity=".035" stroke-width="1"/></pattern>
+        <filter id="nodeShadow" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".35"/></filter>
+        <filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#64d8ff" flood-opacity=".8"/></filter>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
+      </defs>
+      <rect class="graph-canvas" width="100%" height="100%" fill="url(#grid)"/>
+    </svg>
+    <aside id="info" aria-live="polite"></aside>
+  </div>
+  <div id="status"><span><i class="status-dot"></i> <span id="st"></span></span><span>Scroll to zoom · drag to move · double-click to expand</span></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(function(){
+var LBL={
+  Domain:{c:'#C990C0',r:26,fs:13},
+  SystemType:{c:'#57C7E3',r:17,fs:12},
+  Feature:{c:'#8DCC93',r:11,fs:11},
+  Industry:{c:'#F79767',r:14,fs:12},
+  LegacyProduct:{c:'#D9C8AE',r:8,fs:11},
+  ModernProduct:{c:'#FFC454',r:8,fs:11},
+  HybridProduct:{c:'#DA7194',r:8,fs:11}
+};
+var LABELS=Object.keys(LBL);
+var CHG={Domain:-420,SystemType:-230,Feature:-95,Industry:-170,LegacyProduct:-45,ModernProduct:-45,HybridProduct:-45};
+var DIST={BELONGS_TO:80,COVERS:60,IMPLEMENTS:34,USED_IN:120,INTEGRATES_WITH:110,ORCHESTRATES:110,STORES_DATA_IN:110,READS_FROM:110,GOVERNS_DATA_OF:110,SECURES:110,MIGRATES_TO:60};
+var STR={BELONGS_TO:0.5,COVERS:0.5,IMPLEMENTS:0.8,USED_IN:0.12,INTEGRATES_WITH:0.06,ORCHESTRATES:0.05,STORES_DATA_IN:0.05,READS_FROM:0.05,GOVERNS_DATA_OF:0.05,SECURES:0.05,MIGRATES_TO:0.3};
+
+var DOM=[['core','Core business systems'],['ops','Operations and supply chain'],['data','Data and integration'],['support','Support functions'],['ind','Industry-specific systems']];
+
+var SYS=[
+['erp','ERP','core','Central record for finance, stock, purchasing and production'],
+['crm','CRM','core','Leads, pipeline, customers and service'],
+['hcm','HCM / HRMS','core','Payroll, recruiting, time and talent'],
+['epm','EPM','core','Budgeting, forecasting and consolidation'],
+['scm','SCM','ops','Demand planning, sourcing and supplier coordination'],
+['wms','WMS / WaWi','ops','Stock locations, picking, packing, goods receipt'],
+['tms','TMS','ops','Carrier selection, routes, labels and freight cost'],
+['mes','MES','ops','Shop-floor production execution'],
+['plm','PLM','ops','Product design data and lifecycle'],
+['eam','EAM / CMMS','ops','Asset and maintenance management'],
+['qms','QMS','ops','Quality control and compliance records'],
+['fsm','Field service','ops','Technician dispatch and service jobs'],
+['ecom','E-commerce','ops','Online storefront and orders'],
+['pim','PIM','ops','Central product content'],
+['pos','POS','ops','In-store checkout'],
+['cpq','CPQ','ops','Configure, price and quote'],
+['proc','E-procurement','ops','Sourcing, purchasing and supplier portals'],
+['db','Databases','data','Store the data for other systems'],
+['mid','Middleware / iPaaS','data','APIs, EDI and ETL between systems'],
+['bi','BI / analytics','data','Reporting, dashboards and data warehouse'],
+['mdm','MDM','data','Master data governance'],
+['dms','DMS / ECM','support','Documents, records and e-signature'],
+['psa','PSA','support','Project delivery, timesheets and billing'],
+['itsm','ITSM','support','IT incidents, requests and changes'],
+['mkt','Marketing automation','support','Campaigns and lead nurturing'],
+['iam','IAM','support','Identity, access and single sign-on'],
+['grc','GRC','support','Risk, compliance and audit'],
+['tax','Tax and e-invoicing','support','Tax calculation and invoice compliance'],
+['paym','Payments and treasury','support','Bank connectivity, payments and cash'],
+['exp','Expense management','support','Employee expenses and spend control'],
+['ehr','EHR / EMR','ind','Patient records and clinical workflow'],
+['cbs','Core banking','ind','Accounts, lending and ledgers for banks'],
+['pol','Policy administration','ind','Insurance policies and claims'],
+['hpms','Hotel PMS','ind','Reservations and room management'],
+['repm','Property management','ind','Leases, tenants and units'],
+['cons','Construction management','ind','Job costing and site management'],
+['ubil','Utility billing','ind','Metering, billing and customer accounts'],
+['sis','Student information','ind','Enrollment and student records'],
+['lms','LMS','ind','Course delivery and learning'],
+['case','Case management','ind','Citizen and public-sector cases'],
+['lims','LIMS','ind','Lab samples, tests and results'],
+['dlr','Dealer management','ind','Dealership sales, service and parts']
+];
+
+var IND=[['mfg','Manufacturing'],['ret','Retail and e-commerce'],['whl','Wholesale and distribution'],['log','Logistics'],['hlt','Healthcare'],['fin','Banking and insurance'],['con','Construction and real estate'],['utl','Utilities and energy'],['hos','Hospitality'],['edu','Education'],['pub','Public sector'],['lif','Life sciences'],['aut','Automotive'],['pro','Professional services']];
+
+var FEAT=[
+['gl','General ledger',['erp']],
+['arap','Payables and receivables',['erp']],
+['budget','Budgeting and forecasting',['epm']],
+['consol','Financial consolidation',['epm']],
+['taxc','Tax and e-invoicing',['tax','erp']],
+['expense','Expense management',['exp']],
+['pay','Payments and banking',['paym']],
+['treas','Cash and treasury',['paym']],
+['inv','Inventory management',['erp','wms']],
+['purch','Purchasing',['erp','proc','scm']],
+['supp','Supplier management',['proc','scm']],
+['demand','Demand planning',['scm']],
+['prodplan','Production planning',['erp','mes','scm']],
+['shop','Shop-floor execution',['mes']],
+['bom','Product design and BOM',['plm','erp']],
+['qual','Quality control',['qms','mes']],
+['maint','Maintenance management',['eam']],
+['whops','Warehouse operations',['wms']],
+['ship','Transport and shipping',['tms']],
+['fsvc','Field service dispatch',['fsm']],
+['sales','Sales orders and invoicing',['erp','crm','ecom']],
+['leads','Lead and pipeline management',['crm']],
+['quote','Quoting and pricing',['cpq','crm']],
+['storefront','Online storefront',['ecom']],
+['pcontent','Product content',['pim','ecom']],
+['checkout','In-store checkout',['pos']],
+['campaign','Campaign management',['mkt']],
+['support','Customer support cases',['crm']],
+['payroll','Payroll',['hcm']],
+['recruit','Recruiting',['hcm']],
+['time','Time and attendance',['hcm','psa']],
+['projbill','Project billing',['psa','erp']],
+['report','Reporting and analytics',['bi','erp']],
+['integ','System integration',['mid']],
+['store','Data storage',['db']],
+['master','Master data management',['mdm']],
+['docs','Document management',['dms']],
+['esign','Electronic signature',['dms']],
+['access','Identity and access control',['iam']],
+['audit','Compliance and audit',['grc','erp']],
+['itsvc','IT incident and request handling',['itsm']],
+['patient','Patient records',['ehr']],
+['clinbill','Clinical billing',['ehr']],
+['lending','Accounts and lending',['cbs']],
+['claims','Claims processing',['pol']],
+['policy','Policy administration',['pol']],
+['reserv','Reservations and rooms',['hpms']],
+['lease','Lease and tenant management',['repm']],
+['jobcost','Job costing and site management',['cons']],
+['ubill','Utility billing and metering',['ubil']],
+['student','Student records',['sis']],
+['courses','Course delivery',['lms']],
+['casemg','Case management',['case']],
+['lab','Lab sample tracking',['lims']],
+['dealer','Dealer and vehicle sales',['dlr']]
+];
+
+var P={
+erp:{l:['SAP ECC','Dynamics NAV','Dynamics AX','Oracle E-Business Suite','JD Edwards','Infor LN (Baan)'],m:['SAP S/4HANA','Dynamics 365 Business Central','Dynamics 365 Finance and Operations','Oracle NetSuite','Oracle Fusion Cloud ERP'],x:['MicrotronX','proALPHA','abas ERP']},
+crm:{l:['Siebel','SAP CRM','Dynamics CRM on-premises'],m:['Salesforce','Dynamics 365 Sales','HubSpot CRM','SAP Sales Cloud']},
+hcm:{l:['PeopleSoft','SAP HR on ECC'],m:['Workday','SAP SuccessFactors','Personio']},
+epm:{l:['Hyperion','SAP BPC'],m:['Anaplan','Oracle EPM Cloud','SAP Analytics Cloud']},
+scm:{l:['SAP APO','Oracle Demantra'],m:['SAP IBP','Kinaxis','o9 Solutions','Blue Yonder']},
+wms:{l:['SAP WM','Manhattan SCALE'],m:['SAP EWM','Manhattan Active WM','Blue Yonder WMS']},
+tms:{l:['SAP TM on-premises','Oracle OTM on-premises'],m:['Blue Yonder TMS','Manhattan Active TM','Transporeon']},
+mes:{l:['SAP ME','Wonderware MES','Siemens Simatic IT'],m:['Plex MES','Tulip','Siemens Opcenter','SAP Digital Manufacturing']},
+plm:{l:['PTC Windchill on-premises','SAP PLM'],m:['Arena PLM','Onshape','Teamcenter X']},
+eam:{l:['IBM Maximo on-premises','SAP PM','Infor EAM'],m:['IBM Maximo Application Suite','UpKeep','Fiix']},
+qms:{l:['SAP QM'],m:['MasterControl','Veeva Vault QMS','ETQ Reliance']},
+fsm:{l:['SAP CS','ClickSoftware'],m:['Salesforce Field Service','Dynamics 365 Field Service','ServiceNow FSM']},
+ecom:{l:['Magento 1','SAP Hybris','Oracle ATG'],m:['Shopify','Shopware','Adobe Commerce','commercetools']},
+pim:{m:['Akeneo','Pimcore','Salsify','inRiver']},
+pos:{l:['Oracle MICROS 3700'],m:['Lightspeed','Square','Shopify POS']},
+cpq:{l:['SAP Variant Configuration'],m:['Salesforce CPQ','Tacton','Conga']},
+proc:{l:['SAP SRM'],m:['SAP Ariba','Coupa','Jaggaer']},
+db:{l:['SQL Server on-premises','Oracle Database','IBM Db2'],m:['Azure SQL','Amazon RDS','PostgreSQL','SAP HANA Cloud']},
+mid:{l:['SAP PI/PO','IBM MQ','Microsoft BizTalk'],m:['SAP Integration Suite','MuleSoft','Boomi','Azure Logic Apps']},
+bi:{l:['SAP BW','IBM Cognos on-premises','Crystal Reports'],m:['Power BI','Tableau','Snowflake','Looker']},
+mdm:{l:['Informatica MDM on-premises','SAP MDG on-premises'],m:['Reltio','Profisee']},
+dms:{l:['OpenText Documentum','SharePoint Server','Lotus Notes'],m:['SharePoint Online','Box','DocuSign']},
+psa:{l:['Microsoft Project Server','CA Clarity'],m:['Dynamics 365 Project Operations','Kantata']},
+itsm:{l:['BMC Remedy','HP Service Manager'],m:['ServiceNow','Jira Service Management','Freshservice']},
+mkt:{l:['IBM Unica'],m:['HubSpot Marketing Hub','Adobe Marketo Engage','Salesforce Marketing Cloud']},
+iam:{l:['Active Directory on-premises','Oracle Identity Manager'],m:['Microsoft Entra ID','Okta','Ping Identity']},
+grc:{l:['SAP GRC','RSA Archer'],m:['OneTrust','ServiceNow GRC','AuditBoard']},
+tax:{l:['Vertex on-premises'],m:['Avalara','Pagero']},
+paym:{l:['SWIFT Alliance Access','SAP Bank Communication Management'],m:['Stripe','Adyen','Kyriba']},
+exp:{m:['SAP Concur','Expensify','Spendesk']},
+ehr:{l:['Meditech Magic','Cerner Millennium'],m:['Epic','athenahealth','Oracle Health']},
+cbs:{l:['Mainframe core banking','FIS Profile'],m:['Thought Machine','Mambu','Temenos Transact']},
+pol:{l:['Mainframe policy admin'],m:['Guidewire Cloud','Duck Creek OnDemand','Majesco']},
+hpms:{l:['Opera PMS on-premises'],m:['OPERA Cloud','Mews','Cloudbeds']},
+repm:{l:['SAP RE-FX'],m:['Yardi Breeze','AppFolio','MRI Software']},
+cons:{l:['Sage 300 Construction and Real Estate','Viewpoint Vista'],m:['Procore','Autodesk Construction Cloud']},
+ubil:{l:['SAP IS-U','Oracle CC&B on-premises'],m:['SAP S/4HANA Utilities','Oracle Utilities Customer Cloud Service']},
+sis:{l:['Banner on-premises','PeopleSoft Campus Solutions'],m:['Workday Student','Anthology Student']},
+lms:{l:['Moodle self-hosted','Blackboard Learn self-hosted'],m:['Canvas','D2L Brightspace']},
+case:{l:['Custom mainframe case systems'],m:['ServiceNow Public Sector','Dynamics 365 Customer Service']},
+lims:{l:['LabWare on-premises','STARLIMS'],m:['Benchling','LabVantage']},
+dlr:{l:['CDK Drive'],m:['Tekion']}
+};
+
+var MIG=[['SAP ECC','SAP S/4HANA'],['Dynamics NAV','Dynamics 365 Business Central'],['Dynamics AX','Dynamics 365 Finance and Operations'],['Oracle E-Business Suite','Oracle Fusion Cloud ERP'],['SAP APO','SAP IBP'],['SAP CRM','SAP Sales Cloud'],['Dynamics CRM on-premises','Dynamics 365 Sales'],['SAP HR on ECC','SAP SuccessFactors'],['PeopleSoft','Workday'],['SAP WM','SAP EWM'],['SAP PI/PO','SAP Integration Suite'],['Microsoft BizTalk','Azure Logic Apps'],['Magento 1','Adobe Commerce'],['SAP SRM','SAP Ariba'],['Hyperion','Oracle EPM Cloud'],['BMC Remedy','ServiceNow']];
+
+var UIN=[['erp',['mfg','whl','ret']],['mes',['mfg','aut']],['plm',['mfg','aut']],['qms',['mfg','lif']],['cpq',['mfg']],['wms',['whl','ret','log']],['tms',['log','whl']],['pos',['ret','hos']],['ecom',['ret','whl']],['pim',['ret']],['eam',['utl','mfg']],['fsm',['utl','mfg']],['psa',['pro']],['ehr',['hlt']],['cbs',['fin']],['pol',['fin']],['hpms',['hos']],['repm',['con']],['cons',['con']],['ubil',['utl']],['sis',['edu']],['lms',['edu']],['case',['pub']],['lims',['lif','hlt']],['dlr',['aut']]];
+
+var INTEG=[['erp','crm'],['erp','hcm'],['erp','wms'],['erp','scm'],['erp','mes'],['erp','ecom'],['erp','epm'],['erp','tax'],['erp','paym'],['erp','proc'],['erp','plm'],['erp','eam'],['erp','qms'],['erp','psa'],['erp','pos'],['erp','dms'],['wms','tms'],['ecom','pim'],['ecom','pos'],['crm','mkt'],['crm','cpq'],['crm','fsm'],['fsm','eam'],['hcm','exp'],['exp','erp']];
+
+var nodes=[],links=[],byId={},adj={};
+function addN(id,label,name,extra){var n=Object.assign({id:id,label:label,name:name,r:LBL[label].r},extra||{});nodes.push(n);byId[id]=n;adj[id]=[];return n;}
+function addL(a,b,type){var l={source:byId[a],target:byId[b],type:type,id:a+'|'+type+'|'+b};links.push(l);adj[a].push({l:l,o:b,out:true});adj[b].push({l:l,o:a,out:false});}
+
+DOM.forEach(function(d){addN('d:'+d[0],'Domain',d[1],{dom:d[0]});});
+SYS.forEach(function(s){addN('s:'+s[0],'SystemType',s[1],{dom:s[2],desc:s[3]});addL('s:'+s[0],'d:'+s[2],'BELONGS_TO');});
+IND.forEach(function(i){addN('i:'+i[0],'Industry',i[1],{dom:'mid'});});
+FEAT.forEach(function(f){
+  addN('f:'+f[0],'Feature',f[1],{dom:byId['s:'+f[2][0]].dom});
+  f[2].forEach(function(s){addL('s:'+s,'f:'+f[0],'COVERS');});
+});
+var pname={};
+Object.keys(P).forEach(function(sid){
+  [['l','LegacyProduct','Legacy','On-premises'],['m','ModernProduct','Modern cloud','Cloud'],['x','HybridProduct','Varies by version','On-premises or cloud']].forEach(function(t){
+    (P[sid][t[0]]||[]).forEach(function(nm,i){
+      var id='p:'+sid+':'+t[0]+i;
+      addN(id,t[1],nm,{dom:byId['s:'+sid].dom,status:t[2],hosting:t[3],sys:sid});
+      pname[nm]=id;
+      addL(id,'s:'+sid,'IMPLEMENTS');
+    });
+  });
+});
+MIG.forEach(function(m){if(pname[m[0]]&&pname[m[1]])addL(pname[m[0]],pname[m[1]],'MIGRATES_TO');});
+UIN.forEach(function(u){u[1].forEach(function(i){addL('s:'+u[0],'i:'+i,'USED_IN');});});
+INTEG.forEach(function(p){addL('s:'+p[0],'s:'+p[1],'INTEGRATES_WITH');});
+['erp','crm','wms','tms','ecom','hcm'].forEach(function(t){addL('s:mid','s:'+t,'ORCHESTRATES');});
+['erp','crm','wms','mes','hcm'].forEach(function(t){addL('s:'+t,'s:db','STORES_DATA_IN');});
+['db','erp'].forEach(function(t){addL('s:bi','s:'+t,'READS_FROM');});
+['erp','crm','pim'].forEach(function(t){addL('s:mdm','s:'+t,'GOVERNS_DATA_OF');});
+['erp','crm','hcm','dms'].forEach(function(t){addL('s:iam','s:'+t,'SECURES');});
+
+function hood(seeds,hops){
+  var seen=new Set(seeds),front=seeds.slice();
+  for(var h=0;h<hops;h++){
+    var next=[];
+    front.forEach(function(id){adj[id].forEach(function(a){if(!seen.has(a.o)){seen.add(a.o);next.push(a.o);}});});
+    front=next;
+  }
+  return Array.from(seen);
+}
+var PRE={
+  base:{q:" MATCH (n) WHERE NOT n:LegacyProduct AND NOT n:ModernProduct AND NOT n:HybridProduct RETURN n",fn:function(){return nodes.filter(function(n){return n.label.indexOf('Product')<0;}).map(function(n){return n.id;});}},
+  all:{q:" MATCH (n) RETURN n",fn:function(){return nodes.map(function(n){return n.id;});}},
+  erp:{q:" MATCH p=(:SystemType {name:'ERP'})-[*1]-() RETURN p",fn:function(){return hood(['s:erp'],1);}},
+  mig:{q:" MATCH p=(:LegacyProduct)-[:MIGRATES_TO]->(:ModernProduct) RETURN p",fn:function(){
+    var ids=new Set();
+    links.forEach(function(l){if(l.type==='MIGRATES_TO'){ids.add(l.source.id);ids.add(l.target.id);}});
+    Array.from(ids).forEach(function(id){adj[id].forEach(function(a){if(a.l.type==='IMPLEMENTS')ids.add(a.o);});});
+    return Array.from(ids);}},
+  log:{q:" MATCH p=(s:SystemType)-[*1]-() WHERE s.name IN ['SCM','WMS / WaWi','TMS'] RETURN p",fn:function(){return hood(['s:scm','s:wms','s:tms'],1);}},
+  fin:{q:" MATCH p=(s:SystemType)-[*1]-() WHERE s.name IN ['EPM','Tax and e-invoicing','Payments and treasury','Expense management'] RETURN p",fn:function(){return hood(['s:epm','s:tax','s:paym','s:exp'],1);}},
+  hlt:{q:" MATCH p=(:Industry {name:'Healthcare'})-[*1..2]-() RETURN p",fn:function(){return hood(['i:hlt'],2);}}
+};
+
+var svg=d3.select('#svg'),svgNode=svg.node();
+var defs=svg.select('defs');
+LABELS.forEach(function(lb){
+  var c=LBL[lb].c,g=defs.append('radialGradient').attr('id','grad-'+lb).attr('cx','34%').attr('cy','28%').attr('r','72%');
+  g.append('stop').attr('offset','0%').attr('stop-color',d3.color(c).brighter(.95).formatHex());
+  g.append('stop').attr('offset','58%').attr('stop-color',c);
+  g.append('stop').attr('offset','100%').attr('stop-color',d3.color(c).darker(.8).formatHex());
+});
+var gZ=svg.append('g'),gL=gZ.append('g'),gN=gZ.append('g');
+var W=900,H=600,centers={};
+function layout(){
+  var r=svgNode.getBoundingClientRect();W=r.width||900;H=r.height||600;
+  var cx=W/2,cy=H/2,R=Math.min(W,H)*0.36;
+  ['core','ops','data','support','ind'].forEach(function(k,i){
+    var a=-Math.PI/2+i*2*Math.PI/5;centers[k]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)};
+  });
+  centers.mid={x:cx,y:cy};
+}
+layout();
+
+var shown=new Set(),vis=[],vlinks=[],sel=null,hov=null,term='',autoFit=true,nodeSel=null,linkSel=null;
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var sim=d3.forceSimulation()
+  .force('link',d3.forceLink().id(function(d){return d.id;}).distance(function(l){return DIST[l.type]||90;}).strength(function(l){return STR[l.type]||0.2;}))
+  .force('charge',d3.forceManyBody().strength(function(d){return CHG[d.label];}).distanceMax(380))
+  .force('collide',d3.forceCollide().radius(function(d){return d.r+7;}))
+  .force('x',d3.forceX(function(d){return (centers[d.dom]||centers.mid).x;}).strength(function(d){return d.label==='Industry'?0.02:0.07;}))
+  .force('y',d3.forceY(function(d){return (centers[d.dom]||centers.mid).y;}).strength(function(d){return d.label==='Industry'?0.02:0.07;}))
+  .alphaDecay(0.035)
+  .on('tick',ticked)
+  .on('end',function(){if(autoFit){autoFit=false;fit();}});
+
+var drag=d3.drag()
+  .on('start',function(e,d){if(!e.active)sim.alphaTarget(0.25).restart();d.fx=d.x;d.fy=d.y;})
+  .on('drag',function(e,d){d.fx=e.x;d.fy=e.y;})
+  .on('end',function(e){if(!e.active)sim.alphaTarget(0);});
+
+var zoom=d3.zoom().scaleExtent([0.12,4]).on('zoom',function(e){
+  gZ.attr('transform',e.transform);
+  svg.classed('lo',e.transform.k<0.85);
+});
+svg.call(zoom).on('dblclick.zoom',null);
+svg.on('click',function(e){if(e.target===svgNode){sel=null;info();applyFocus();}});
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function stroke(c){return d3.color(c).darker(0.8).formatHex();}
+
+function update(){
+  var vs=new Set();
+  vis=nodes.filter(function(n){if(shown.has(n.id)){vs.add(n.id);return true;}return false;});
+  nodes.forEach(function(n){if(!vs.has(n.id)){n.x=null;n.y=null;n.fx=null;n.fy=null;}});
+  vlinks=links.filter(function(l){return vs.has(l.source.id)&&vs.has(l.target.id);});
+  vis.forEach(function(n){
+    if(n.x==null){
+      var nb=null;
+      adj[n.id].forEach(function(a){var o=byId[a.o];if(!nb&&o.x!=null&&vs.has(o.id))nb=o;});
+      if(nb){n.x=nb.x+(Math.random()-0.5)*30;n.y=nb.y+(Math.random()-0.5)*30;}
+      else{var c=centers[n.dom]||centers.mid;n.x=c.x+(Math.random()-0.5)*90;n.y=c.y+(Math.random()-0.5)*90;}
+    }
+  });
+  sim.nodes(vis);
+  sim.force('link').links(vlinks);
+  draw();
+  sim.alpha(0.7).restart();
+  chips();status();
+}
+
+function draw(){
+  linkSel=gL.selectAll('g.lk').data(vlinks,function(d){return d.id;}).join(
+    function(en){
+      var g=en.append('g').attr('class','lk');
+      g.append('path').attr('marker-end','url(#ar)');
+      g.append('text').attr('class','rl').text(function(d){return d.type;});
+      return g;
+    },
+    function(u){return u;},
+    function(ex){return ex.remove();}
+  );
+  nodeSel=gN.selectAll('g.nd').data(vis,function(d){return d.id;}).join(
+    function(en){
+      var g=en.append('g').attr('class','nd').call(drag);
+      g.append('circle').attr('r',function(d){return d.r;}).attr('fill',function(d){return 'url(#grad-'+d.label+')';}).attr('stroke',function(d){return stroke(LBL[d.label].c);});
+      g.append('text').attr('class',function(d){return 'lbl '+d.label;}).attr('dy',function(d){return d.r+LBL[d.label].fs+1;}).style('font-size',function(d){return LBL[d.label].fs+'px';}).style('font-weight',function(d){return d.label==='Domain'?600:400;}).text(function(d){return d.name;});
+      g.append('title').text(function(d){return d.label+': '+d.name;});
+      g.on('click',function(e,d){e.stopPropagation();sel=d.id;info();applyFocus();})
+       .on('dblclick',function(e,d){e.stopPropagation();expand(d.id);})
+       .on('mouseenter',function(e,d){hov=d.id;applyFocus();})
+       .on('mouseleave',function(){hov=null;applyFocus();});
+      return g;
+    },
+    function(u){return u;},
+    function(ex){return ex.remove();}
+  );
+  applyFocus();
+}
+
+function ticked(){
+  if(!linkSel)return;
+  linkSel.each(function(d){
+    var dx=d.target.x-d.source.x,dy=d.target.y-d.source.y,L=Math.hypot(dx,dy)||1;
+    var ux=dx/L,uy=dy/L;
+    var g=d3.select(this);
+    var x1=d.source.x+ux*d.source.r,y1=d.source.y+uy*d.source.r;
+    var x2=d.target.x-ux*(d.target.r+2),y2=d.target.y-uy*(d.target.r+2);
+    var hash=0;for(var i=0;i<d.id.length;i++)hash=(hash*31+d.id.charCodeAt(i))|0;
+    var bend=(hash%2?1:-1)*Math.min(24,L*.09),mx=(x1+x2)/2,my=(y1+y2)/2;
+    var cx=mx-uy*bend,cy=my+ux*bend;
+    g.select('path').attr('d','M'+x1+','+y1+' Q'+cx+','+cy+' '+x2+','+y2);
+    g.select('text').attr('x',(x1+2*cx+x2)/4).attr('y',(y1+2*cy+y2)/4-3);
+  });
+  nodeSel.attr('transform',function(d){return 'translate('+d.x+','+d.y+')';});
+}
+
+function match(n){return term&&n.name.toLowerCase().indexOf(term)>=0;}
+function applyFocus(){
+  if(!nodeSel)return;
+  var f=sel||hov,nb=new Set();
+  if(f){nb.add(f);adj[f].forEach(function(a){nb.add(a.o);});}
+  nodeSel.classed('dim',function(d){return f?!nb.has(d.id):(term&&!match(d));})
+    .classed('sel',function(d){return d.id===sel;})
+    .classed('hit',function(d){return !!term&&match(d);})
+    .classed('foc',function(d){return !!f&&nb.has(d.id);});
+  linkSel.classed('dim',function(d){return f?!(d.source.id===f||d.target.id===f):!!term;})
+    .classed('on',function(d){return !!f&&(d.source.id===f||d.target.id===f);});
+}
+
+function fit(){
+  if(!vis.length)return;
+  layout();
+  var xs=d3.extent(vis,function(n){return n.x;}),ys=d3.extent(vis,function(n){return n.y;});
+  var pad=70,bw=xs[1]-xs[0]+pad*2,bh=ys[1]-ys[0]+pad*2;
+  var k=Math.min(2.2,0.96/Math.max(bw/W,bh/H));
+  var tx=W/2-k*(xs[0]+xs[1])/2,ty=H/2-k*(ys[0]+ys[1])/2;
+  svg.transition().duration(reduce?0:500).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+}
+
+function chips(){
+  var el=document.getElementById('chips');
+  el.innerHTML='';
+  LABELS.forEach(function(lb){
+    var tot=0,on=0;
+    nodes.forEach(function(n){if(n.label===lb){tot++;if(shown.has(n.id))on++;}});
+    var b=document.createElement('button');
+    b.type='button';b.className='chip'+(on?'':' off');
+    b.setAttribute('aria-pressed',on?'true':'false');
+    b.innerHTML='<i style="background:'+LBL[lb].c+';border-color:'+stroke(LBL[lb].c)+'"></i>'+lb+' <em>'+on+'/'+tot+'</em>';
+    b.onclick=function(){
+      var ids=nodes.filter(function(n){return n.label===lb;}).map(function(n){return n.id;});
+      var any=ids.some(function(id){return shown.has(id);});
+      ids.forEach(function(id){if(any)shown.delete(id);else shown.add(id);});
+      if(sel&&!shown.has(sel)){sel=null;info();}
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+function status(){
+  document.getElementById('st').textContent='Displaying '+vis.length+' nodes, '+vlinks.length+' relationships.';
+}
+
+function expand(id){adj[id].forEach(function(a){shown.add(a.o);});shown.add(id);update();}
+function reveal(id){
+  if(!shown.has(id)){shown.add(id);adj[id].forEach(function(a){shown.add(a.o);});update();}
+  sel=id;info();applyFocus();
+}
+
+function props(n){
+  var o=[['name',n.name]];
+  var ins=function(t){return adj[n.id].filter(function(a){return !a.out&&a.l.type===t;}).map(function(a){return byId[a.o];});};
+  var outs=function(t){return adj[n.id].filter(function(a){return a.out&&a.l.type===t;}).map(function(a){return byId[a.o];});};
+  var names=function(a){return a.map(function(x){return x.name;}).join(', ')||'none';};
+  if(n.label==='Domain'){o.push(['systems',ins('BELONGS_TO').length]);}
+  else if(n.label==='SystemType'){
+    var im=ins('IMPLEMENTS');
+    o.push(['description',n.desc]);
+    o.push(['domain',names(outs('BELONGS_TO'))]);
+    o.push(['features',outs('COVERS').length]);
+    o.push(['legacy_products',im.filter(function(x){return x.label==='LegacyProduct';}).length]);
+    o.push(['modern_products',im.filter(function(x){return x.label==='ModernProduct';}).length]);
+    o.push(['hybrid_products',im.filter(function(x){return x.label==='HybridProduct';}).length]);
+  }
+  else if(n.label==='Feature'){o.push(['provided_by',names(ins('COVERS'))]);}
+  else if(n.label==='Industry'){o.push(['systems',names(ins('USED_IN'))]);}
+  else{
+    o.push(['status',n.status]);o.push(['hosting',n.hosting]);
+    o.push(['system_type',names(outs('IMPLEMENTS'))]);
+    var mt=outs('MIGRATES_TO'),mf=ins('MIGRATES_TO');
+    if(mt.length)o.push(['migrates_to',names(mt)]);
+    if(mf.length)o.push(['migrates_from',names(mf)]);
+  }
+  return o;
+}
+
+function info(){
+  var el=document.getElementById('info');
+  if(!sel){
+    el.className='empty';
+    el.innerHTML='<div class="h">Select a node</div><p>Click a node to see its properties and relationships. Double-click to pull in its neighbors. Use the label chips above to show or hide whole node types, such as products.</p><p class="m">Products are representative examples, not a full vendor catalog. Check each vendor\'s current lifecycle and support dates before planning a migration.</p>';
+    return;
+  }
+  el.className='';
+  var n=byId[sel],c=LBL[n.label].c;
+  var h='<span class="tag" style="background:'+c+'">'+n.label+'</span><div class="ttl">'+esc(n.name)+'</div><dl class="kv">';
+  props(n).forEach(function(p){h+='<dt>'+p[0]+'</dt><dd>'+esc(p[1])+'</dd>';});
+  h+='</dl><div class="acts"><button class="btn" data-act="expand" type="button">Expand neighbors</button><button class="btn" data-act="hide" type="button">Hide node</button>';
+  if(n.fx!=null)h+='<button class="btn" data-act="unpin" type="button">Unpin</button>';
+  h+='</div>';
+  var rs=adj[n.id].slice().sort(function(a,b){return a.l.type<b.l.type?-1:a.l.type>b.l.type?1:0;});
+  h+='<div class="rh">Relationships ('+rs.length+')</div>';
+  rs.forEach(function(a){
+    var o=byId[a.o];
+    h+='<button class="rel" data-id="'+o.id+'" type="button"><span>'+(a.out?'':'&larr; ')+a.l.type+(a.out?' &rarr;':'')+'</span><i style="background:'+LBL[o.label].c+'"></i>'+esc(o.name)+'</button>';
+  });
+  el.innerHTML=h;
+}
+document.getElementById('info').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||!sel)return;
+  if(b.dataset.id){reveal(b.dataset.id);return;}
+  var act=b.dataset.act;
+  if(act==='expand')expand(sel);
+  else if(act==='hide'){shown.delete(sel);sel=null;update();info();}
+  else if(act==='unpin'){byId[sel].fx=null;byId[sel].fy=null;sim.alpha(0.3).restart();info();}
+});
+
+/* Tabular route ---------------------------------------------------------- */
+var tableKind='nodes',tableRows=[];
+function nodeSummary(n){
+  if(n.desc)return n.desc;
+  if(n.label.indexOf('Product')>=0)return [n.status,n.hosting,byId['s:'+n.sys]&&byId['s:'+n.sys].name].filter(Boolean).join(' · ');
+  if(n.label==='Feature')return 'Provided by '+adj[n.id].filter(function(a){return !a.out&&a.l.type==='COVERS';}).map(function(a){return byId[a.o].name;}).join(', ');
+  if(n.label==='Industry')return adj[n.id].filter(function(a){return !a.out&&a.l.type==='USED_IN';}).length+' mapped systems';
+  if(n.label==='Domain')return adj[n.id].filter(function(a){return !a.out&&a.l.type==='BELONGS_TO';}).length+' system types';
+  return '';
+}
+function badge(label){return '<span class="type-badge" style="--dot:'+LBL[label].c+'">'+esc(label)+'</span>';}
+function populateTableTypes(){
+  var selEl=document.getElementById('tableType'),types;
+  if(tableKind==='nodes')types=LABELS.slice();
+  else types=Array.from(new Set(links.map(function(l){return l.type;}))).sort();
+  selEl.innerHTML='<option value="">All '+(tableKind==='nodes'?'node':'relationship')+' types</option>'+types.map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>';}).join('');
+}
+function renderDataTable(){
+  var query=document.getElementById('tableSearch').value.trim().toLowerCase();
+  var type=document.getElementById('tableType').value;
+  var head=document.getElementById('dataHead'),body=document.getElementById('dataBody');
+  if(tableKind==='nodes'){
+    tableRows=nodes.filter(function(n){
+      var hay=[n.id,n.name,n.label,nodeSummary(n),n.dom,n.status,n.hosting].join(' ').toLowerCase();
+      return (!type||n.label===type)&&(!query||hay.indexOf(query)>=0);
+    });
+    head.innerHTML='<tr><th>Name</th><th>Type</th><th>Node ID</th><th>Description / properties</th><th>Relations</th></tr>';
+    body.innerHTML=tableRows.length?tableRows.map(function(n){return '<tr><td><button class="node-link" data-open-node="'+n.id+'" type="button">'+esc(n.name)+'</button></td><td>'+badge(n.label)+'</td><td><code>'+esc(n.id)+'</code></td><td>'+esc(nodeSummary(n)||'—')+'</td><td>'+adj[n.id].length+'</td></tr>';}).join(''):'<tr><td class="empty-row" colspan="5">No nodes match this filter.</td></tr>';
+  }else{
+    tableRows=links.filter(function(l){
+      var hay=[l.type,l.source.id,l.source.name,l.source.label,l.target.id,l.target.name,l.target.label].join(' ').toLowerCase();
+      return (!type||l.type===type)&&(!query||hay.indexOf(query)>=0);
+    });
+    head.innerHTML='<tr><th>Relationship</th><th>Source node</th><th></th><th>Target node</th><th>Source type</th><th>Target type</th></tr>';
+    body.innerHTML=tableRows.length?tableRows.map(function(l){return '<tr><td><code>'+esc(l.type)+'</code></td><td><button class="node-link" data-open-node="'+l.source.id+'" type="button">'+esc(l.source.name)+'</button></td><td class="dir">→</td><td><button class="node-link" data-open-node="'+l.target.id+'" type="button">'+esc(l.target.name)+'</button></td><td>'+badge(l.source.label)+'</td><td>'+badge(l.target.label)+'</td></tr>';}).join(''):'<tr><td class="empty-row" colspan="6">No relationships match this filter.</td></tr>';
+  }
+  document.getElementById('tableCount').textContent=tableRows.length+' of '+(tableKind==='nodes'?nodes.length:links.length)+' records';
+}
+function setMode(mode,push){
+  mode=mode==='table'?'table':'graph';
+  document.getElementById('app').classList.toggle('table-mode',mode==='table');
+  document.querySelectorAll('[data-mode-link]').forEach(function(a){a.classList.toggle('active',a.dataset.modeLink===mode);});
+  if(push){
+    var url=new URL(window.location.href);
+    if(mode==='table')url.searchParams.set('view','table');else url.searchParams.delete('view');
+    history.pushState({view:mode},'',url.pathname+(url.search?url.search:'')+url.hash);
+  }
+  if(mode==='table'){
+    document.getElementById('st').textContent=nodes.length+' nodes, '+links.length+' relationships available.';
+    renderDataTable();
+  }else{
+    status();
+    requestAnimationFrame(function(){layout();sim.force('x').initialize(vis);sim.force('y').initialize(vis);sim.alpha(.18).restart();fit();});
+  }
+}
+document.querySelectorAll('[data-mode-link]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();setMode(a.dataset.modeLink,true);});});
+document.querySelectorAll('[data-table-tab]').forEach(function(b){b.addEventListener('click',function(){
+  tableKind=b.dataset.tableTab;
+  document.querySelectorAll('[data-table-tab]').forEach(function(x){x.classList.toggle('active',x===b);});
+  populateTableTypes();renderDataTable();
+});});
+document.getElementById('tableSearch').addEventListener('input',renderDataTable);
+document.getElementById('tableType').addEventListener('change',renderDataTable);
+document.getElementById('dataBody').addEventListener('click',function(e){var b=e.target.closest('[data-open-node]');if(!b)return;setMode('graph',true);reveal(b.dataset.openNode);});
+document.getElementById('exportCsv').addEventListener('click',function(){
+  var rows;
+  if(tableKind==='nodes')rows=[['id','name','type','summary','relationship_count']].concat(tableRows.map(function(n){return [n.id,n.name,n.label,nodeSummary(n),adj[n.id].length];}));
+  else rows=[['relationship','source_id','source_name','source_type','target_id','target_name','target_type']].concat(tableRows.map(function(l){return [l.type,l.source.id,l.source.name,l.source.label,l.target.id,l.target.name,l.target.label];}));
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+  a.href=url;a.download='enterprise-graph-'+tableKind+'.csv';a.click();setTimeout(function(){URL.revokeObjectURL(url);},0);
+});
+window.addEventListener('popstate',function(){setMode(new URLSearchParams(location.search).get('view'),false);});
+
+function setView(k){
+  shown=new Set(PRE[k].fn());
+  sel=null;hov=null;autoFit=true;
+  document.getElementById('qt').textContent=PRE[k].q;
+  update();info();
+}
+document.getElementById('pre').addEventListener('change',function(e){setView(e.target.value);});
+document.getElementById('fit').addEventListener('click',fit);
+document.getElementById('rl').addEventListener('change',function(e){svg.classed('rlon',e.target.checked);});
+var qEl=document.getElementById('q');
+qEl.addEventListener('input',function(){term=qEl.value.trim().toLowerCase();applyFocus();});
+qEl.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'||!term)return;
+  var m=nodes.filter(function(n){return n.name.toLowerCase().indexOf(term)>=0;});
+  if(!m.length)return;
+  var v=m.filter(function(n){return shown.has(n.id);})[0]||m[0];
+  reveal(v.id);
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&sel){sel=null;info();applyFocus();}});
+window.addEventListener('resize',function(){layout();sim.force('x').initialize(vis);sim.force('y').initialize(vis);sim.alpha(0.2).restart();});
+
+document.getElementById('nodeMetric').textContent=nodes.length;
+document.getElementById('edgeMetric').textContent=links.length;
+populateTableTypes();
+setView('base');
+setMode(new URLSearchParams(location.search).get('view'),false);
+})();
+</script>
+</body>
+</html>
