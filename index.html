@@ -43,6 +43,9 @@ input[type=search]{min-width:200px}
 .chip i{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid}
 .chip em{font-style:normal;color:var(--muted)}
 #main{position:relative;flex:1;min-height:0;overflow:hidden}
+.stage{width:100%;height:100%}
+#app.table-mode .stage{display:none}
+#status{display:none!important}
 #svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #svg:active{cursor:grabbing}
 line{stroke:var(--edge);stroke-width:1.2}
@@ -194,7 +197,7 @@ input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:
   #pre{width:100%;min-width:0;text-overflow:ellipsis}
   #q{width:100%;min-width:0;flex:none}
   .toolbar .sm:has(#rl){padding:2px 3px;justify-content:flex-start}
-  #fit{width:100%}
+  #fit,#reset{width:100%}
   #qbar{white-space:normal;overflow:hidden;max-height:78px;line-height:1.55;word-break:break-word;padding:8px 10px;font-size:10px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:8px}
   #qbar b{display:block;margin:0 0 4px}
   #chips{display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:6px;width:100%}
@@ -202,10 +205,45 @@ input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:
   .chip em{margin-left:auto}
   .table-view{padding:24px}
   .data-scroll{max-height:calc(100vh - 220px)}
+
+  /* Three-part layout: controls rail | square graph | details panel. */
+  #app{grid-template-columns:270px minmax(0,1fr) 340px}
+  #main{
+    grid-column:2 / 4;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:0;
+  }
+  #status{grid-column:2 / 4}
+  .stage{
+    grid-column:1;grid-row:1;
+    min-width:0;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;
+  }
+  #svg{
+    height:100%;width:100%;
+    border:1px solid var(--border);
+    border-radius:18px;
+    background:rgba(255,255,255,.02);
+    box-shadow:var(--shadow);
+  }
+  #info{
+    grid-column:2;grid-row:1;
+    position:static;
+    width:auto;max-height:none;height:100%;
+    border-width:0 0 0 1px;border-radius:0;
+    box-shadow:none;
+    padding:20px 18px;
+    overflow:auto;
+  }
+  .table-view{grid-column:1 / -1;grid-row:1}
+  #app.table-mode .stage{display:none}
 }
 
 @media(min-width:761px) and (max-width:1100px){
-  #app{grid-template-columns:238px minmax(0,1fr)}
+  #app{grid-template-columns:238px minmax(0,1fr) 290px}
+  #main{grid-template-columns:minmax(0,1fr) 290px}
   header{width:238px;padding:15px 13px}
   .brand-copy h1{font-size:14px}
   .eyebrow{font-size:8px}
@@ -257,6 +295,7 @@ input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:
       <input id="q" class="graph-control" type="search" placeholder="Find a system, feature or product" aria-label="Search nodes">
       <label class="sm graph-control"><input type="checkbox" id="rl"> Relationship labels</label>
       <button id="fit" class="btn graph-control" type="button">Fit to screen</button>
+      <button id="reset" class="btn graph-control" type="button">Reset graph</button>
     </div>
     <div id="qbar" class="graph-control"><b>graph$</b><span id="qt"></span></div>
     <div class="row graph-control" id="chips" role="group" aria-label="Show or hide node labels"></div>
@@ -280,6 +319,7 @@ input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:
         </div>
       </div>
     </section>
+    <div class="stage">
     <svg id="svg" role="img" aria-label="Force-directed knowledge graph of enterprise systems, features, industries and products">
       <defs>
         <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="currentColor" stroke-opacity=".035" stroke-width="1"/></pattern>
@@ -289,6 +329,7 @@ input[type=search]{min-width:250px;padding-left:34px;background-image:url("data:
       </defs>
       <rect class="graph-canvas" width="100%" height="100%" fill="url(#grid)"/>
     </svg>
+    </div>
     <aside id="info" aria-live="polite"></aside>
   </div>
   <div id="status"><span><i class="status-dot"></i> <span id="st"></span></span><span>Scroll to zoom · drag to move · double-click to expand</span></div>
@@ -829,6 +870,12 @@ function setView(k){
 }
 document.getElementById('pre').addEventListener('change',function(e){setView(e.target.value);});
 document.getElementById('fit').addEventListener('click',fit);
+document.getElementById('reset').addEventListener('click',function(){
+  nodes.forEach(function(n){n.x=n.y=n.fx=n.fy=null;});
+  term='';document.getElementById('q').value='';
+  document.getElementById('pre').value='base';
+  setView('base');
+});
 document.getElementById('rl').addEventListener('change',function(e){svg.classed('rlon',e.target.checked);});
 var qEl=document.getElementById('q');
 qEl.addEventListener('input',function(){term=qEl.value.trim().toLowerCase();applyFocus();});
